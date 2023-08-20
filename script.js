@@ -46,6 +46,7 @@ const Game = (function() {
     const modal = document.querySelector('dialog');
     let player1 = {}
     let player2 = {}
+    let winnerX = true
     let count = 0;
     const selectWinner = (num1, num2, num3) => {
         const winner1 = document.querySelector(`#square${num1}`)
@@ -56,40 +57,97 @@ const Game = (function() {
         winner3.classList.add('winner');
         return true
     }
-    const checker = () => {
-        const board = gameBoard.board;
+    const checker = (board) => {
         for (i=1; i<8; i+=3) {
             if (board[i] === board[i-1] &&
                 board[i-1] === board[i+1] &&
-                board[i+1] !== '') return selectWinner(i-1, i, i+1)
+                board[i+1] !== '') {
+                winnerX = board[i];
+                return true 
+            }
         }
         for (i=3; i<6; i++) {
             if (board[i] === board[i-3] &&
                 board[i-3] === board[i+3] &&
-                board[i+3] !== '') return selectWinner(i-3, i, i+3)
+                board[i+3] !== '') {
+                winnerX = board[i];
+                return true 
+            }
         }
         if (board[0] === board[4] &&
             board[4] === board[8] &&
-            board[8] !== '') return selectWinner(0, 4, 8)
+            board[8] !== '') {
+                winnerX = board[i];
+                return true 
+            }
         if (board[2] === board[4] &&
             board[4] === board[6] &&
-            board[6] !== '') return selectWinner(2, 4, 6)
+            board[6] !== '') {
+                winnerX = board[i];
+                return true 
+            }     
+        else return false
+    }
+    const gameChecker = () => {
+        if (checker(gameBoard.board)) return selectWinner()
         else return false
     }
     const player1Turn = (e) => {
         player1.move(e);
         displayBoard.display();
-        if (checker()) return endGame()
+        if (gameChecker()) return endGame()
         count++;
         turns()
     }
     const player2Turn = (e) => {
         player2.move(e);
         displayBoard.display();
-        if (checker()) return endGame()
+        if (gameChecker()) return endGame()
         count++;
         turns()
     }
+    const computerTurn = () => {
+
+    }
+    const staticValue = (list) => {
+        if (!checker(list)) return 0
+        else if (winnerX === true) return 1
+        else return -1
+    }
+    const childPositions = (list, turnX) => {
+        let position = [...list]
+        let positions = [];
+        list.forEach((slot, index) => {
+            if (slot === '') {
+                position = [...list];
+                position[index] = turnX;
+                positions.push(position)
+            }
+        })
+        return positions
+    }
+    const minimax = (position, depth, maxTurn) => {
+        if (depth == 9 || checker(position)) return staticValue(position)
+        if (maxTurn) {
+            let maxValue = -Infinity
+            let positions = childPositions(position, true);
+            positions.forEach((option) => {
+                let value = minimax(option, depth + 1, false);
+                maxValue = Math.max(value, maxValue)
+            })
+            return maxValue
+        }
+        else {
+            let minValue = Infinity
+            let positions = childPositions(position, false);
+            positions.forEach((option) => {
+                value = minimax(option, depth + 1, true);
+                minValue = Math.min(value, minValue)
+            })
+            return minValue
+        }
+    }
+    // minimax(gameBoard.board, 0, true)
     const turns = () => {
         if (count % 2 === 0) {
             squares.forEach((square) => {
@@ -148,5 +206,5 @@ const Game = (function() {
     }
     const newGame = document.querySelector('.new-game');
     newGame.addEventListener('click', play)
-    return {play}
+    return {minimax}
 })()
