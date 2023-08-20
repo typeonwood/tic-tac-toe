@@ -33,9 +33,17 @@ html, body {
     align-items: center;
     justify-content: center;
     font-size: 10rem;
+    background-color: white;
 }
 
 .new-game {
     margin: 24px;
+}
+
+button {
     cursor: pointer;
+}
+
+.winner {
+    background-color: rgb(98, 228, 98);
 }
