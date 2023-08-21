@@ -131,23 +131,30 @@ const Game = (function() {
         if (maxTurn) {
             let maxValue = -Infinity
             let positions = childPositions(position, true);
+            let best = positions[0];
             positions.forEach((option) => {
                 let value = minimax(option, depth + 1, false);
-                maxValue = Math.max(value, maxValue)
+                if (value > maxValue) {
+                    best = option
+                    maxValue = value
+                }
             })
-            return maxValue
+            return best
         }
         else {
             let minValue = Infinity
             let positions = childPositions(position, false);
+            let best = positions[0];
             positions.forEach((option) => {
-                value = minimax(option, depth + 1, true);
-                minValue = Math.min(value, minValue)
+                let value = minimax(option, depth + 1, true);
+                if (value < minValue) {
+                    best = option
+                    minValue = value
+                }
             })
-            return minValue
+            return best
         }
     }
-    // minimax(gameBoard.board, 0, true)
     const turns = () => {
         if (count % 2 === 0) {
             squares.forEach((square) => {
