@@ -48,7 +48,7 @@ const Game = (function() {
     let player2 = {}
     let winnerX = true
     let mode = 'pvp'
-    let bestMove
+    let bestBoard
     let count = 0;
     const selectWinner = (num1, num2, num3) => {
         const winner1 = document.querySelector(`#square${num1}`)
@@ -141,53 +141,56 @@ const Game = (function() {
         })
         return positions
     }
-    const minimax = (position, depth, maxTurn, side) => {
+    const minimax = (position, depth, maxTurn=false) => {
         if (checker(position, false)) return staticValue(depth)
         else if (maxTurn) {
-            let positions = childPositions(position, side)
+            let positions = childPositions(position, maxTurn)
             let maxValue = -100
-            let bestIndex = 0
+            let bestPosition = []
             let i = 0;
             while (i < positions.length) {
                 let random = Math.floor(Math.random() * 2)
-                let value = minimax(positions[i], depth + 1, false, !side);
+                let value = minimax(positions[i], depth + 1, false);
                 if (value > maxValue) {
                     maxValue = value;
-                    bestIndex = i // maybe do operation for finding actual index for board move here?
-                    // or maybe rewrite it later on
+                    bestPosition = [...positions[i]]
                 }
                 else if (value === maxValue && random === 1) {
-                    bestIndex = i
+                    bestPosition = [...positions[i]]
                 }
                 i++
             }
-            bestMove = bestIndex
+            bestBoard = [...bestPosition]
             return maxValue
         }
         else {
-            let positions = childPositions(position, side)
+            let positions = childPositions(position, maxTurn)
             let minValue = 100
-            let bestIndex = 0
+            let bestPosition = []
             let i = 0;
             while (i < positions.length) {
                 let random = Math.floor(Math.random() * 2)
-                let value = minimax(positions[i], depth + 1, true, !side);
+                let value = minimax(positions[i], depth + 1, true);
                 if (value < minValue) {
                     minValue = value;
-                    bestIndex = i
+                    bestPosition = [...positions[i]]
                 }
                 else if (value === minValue && random === 1) {
-                    bestIndex = i
+                    bestPosition = [...positions[i]]
                 }
                 i++
             }
-            bestMove = bestIndex
+            bestBoard = [...bestPosition]
             return minValue
         }
     }
     const computerTurn = (num) => {
         setTimeout(() => {
-            minimax(gameBoard.board, num, true, player2.side);
+            minimax(gameBoard.board, num);
+            let bestMove;
+            bestBoard.forEach((item, index) => {
+                if (item !== gameBoard.board[index]) bestMove = index
+            })
             let choice = document.querySelector(`#square${bestMove}`)
             let evt = new MouseEvent('click', {
                 bubbles: true,
