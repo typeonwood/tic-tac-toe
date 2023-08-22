@@ -39,14 +39,16 @@ const displayBoard = (function() {
 })()
 
 const Game = (function() {
-    const squares = document.querySelectorAll('.square')
-    const announcement = document.querySelector('.announcement')
     let name1 = ''
     let name2 = ''
+    const squares = document.querySelectorAll('.square')
+    const announcement = document.querySelector('.announcement')
     const modal = document.querySelector('dialog');
     let player1 = {}
     let player2 = {}
     let winnerX = true
+    let mode = 'pvp'
+    let bestBoard
     let count = 0;
     const selectWinner = (num1, num2, num3) => {
         const winner1 = document.querySelector(`#square${num1}`)
@@ -57,13 +59,22 @@ const Game = (function() {
         winner3.classList.add('winner');
         return true
     }
-    const checker = (board) => {
+    const checker = (board, game=true) => {
+        let squaresLeft = 0;
+        gameBoard.board.forEach((slot) => {
+            if (slot === '') squaresLeft++
+        })
+        if (squaresLeft === 0) {
+            winnerX = 'draw';
+            return true
+        }
         for (i=1; i<8; i+=3) {
             if (board[i] === board[i-1] &&
                 board[i-1] === board[i+1] &&
                 board[i+1] !== '') {
                 winnerX = board[i];
-                return true 
+                if (game) return selectWinner(i-1, i, i+1)  
+                else return true
             }
         }
         for (i=3; i<6; i++) {
@@ -71,124 +82,177 @@ const Game = (function() {
                 board[i-3] === board[i+3] &&
                 board[i+3] !== '') {
                 winnerX = board[i];
-                return true 
+                if (game) return selectWinner(i-3, i, i+3)  
+                else return true
             }
         }
         if (board[0] === board[4] &&
             board[4] === board[8] &&
             board[8] !== '') {
                 winnerX = board[i];
-                return true 
+                if (game) return selectWinner(0, 4, 8)  
+                else return true
             }
         if (board[2] === board[4] &&
             board[4] === board[6] &&
             board[6] !== '') {
                 winnerX = board[i];
-                return true 
+                if (game) return selectWinner(2, 4, 6)  
+                else return true
             }     
         else return false
     }
     const gameChecker = () => {
-        if (checker(gameBoard.board)) return selectWinner()
-        else return false
+        return checker(gameBoard.board)
     }
-    const player1Turn = (e) => {
+    const pvpTurn = (e) => {
         player1.move(e);
         displayBoard.display();
-        if (gameChecker()) return endGame()
+        if (gameChecker() === true) return endGame()
         count++;
         turns()
     }
     const player2Turn = (e) => {
         player2.move(e);
         displayBoard.display();
-        if (gameChecker()) return endGame()
+        if (gameChecker() === true) return endGame()
         count++;
         turns()
     }
-    const computerTurn = () => {
-
-    }
     const staticValue = (list) => {
-        if (!checker(list)) return 0
-        else if (winnerX === true) return 1
-        else return -1
+        if (checker(list, false) !== true) return 0
+        let result = 0
+        let squaresLeft = 0;
+        list.forEach((slot) => {
+            if (slot === '') squaresLeft++
+        })
+        if (winnerX === true) {
+            result = 1 + squaresLeft
+        }
+        else {
+            result = -1 - squaresLeft;
+        }
+        return result
     }
-    const childPositions = (list, turnX) => {
+    const childPositions = (list, maxTurn) => {
         let position = [...list]
         let positions = [];
         list.forEach((slot, index) => {
             if (slot === '') {
                 position = [...list];
-                position[index] = turnX;
+                position[index] = maxTurn;
                 positions.push(position)
             }
         })
         return positions
     }
-    const minimax = (position, depth, maxTurn) => {
-        if (depth == 9 || checker(position)) return staticValue(position)
+    const minimax = (position, depth, maxTurn, alpha, beta) => {
+        let positions = childPositions(position, maxTurn)
+        let randomIndex = Math.floor(Math.random() * 2);
+        if (depth == 9 || checker(position, false)) return staticValue(position)
         if (maxTurn) {
-            let maxValue = -Infinity
-            let positions = childPositions(position, true);
-            let best = positions[0];
-            positions.forEach((option) => {
-                let value = minimax(option, depth + 1, false);
+            let maxValue = -100
+            let bestPosition = []
+            let i = 0;
+            while (i < positions.length) {
+                let value = minimax(positions[i], depth + 1, false, alpha, beta);
                 if (value > maxValue) {
-                    best = option
-                    maxValue = value
+                    maxValue = value;
+                    alpha = Math.max(value, alpha)
+                    bestPosition = positions[i];
+                    if (beta <= alpha) {break}
                 }
-            })
-            return best
+                else if (value === maxValue && randomIndex === 1) {
+                    bestPosition = positions[i]
+                }
+                i++
+            }
+            bestBoard = [...bestPosition]
+            return maxValue
         }
         else {
-            let minValue = Infinity
-            let positions = childPositions(position, false);
-            let best = positions[0];
-            positions.forEach((option) => {
-                let value = minimax(option, depth + 1, true);
+            let minValue = 100
+            let bestPosition = []
+            let i = 0;
+            while (i < positions.length) {
+                let value = minimax(positions[i], depth + 1, true, alpha, beta);
                 if (value < minValue) {
-                    best = option
-                    minValue = value
+                    minValue = value;
+                    beta = Math.min(value, beta)
+                    bestPosition = positions[i];
+                    if (beta <= alpha) {break}
                 }
-            })
-            return best
+                else if (value === minValue && randomIndex === 1) {
+                    bestPosition = positions[i]
+                }
+                i++
+            }
+            bestBoard = [...bestPosition]
+            return minValue
         }
     }
-    const turns = () => {
-        if (count % 2 === 0) {
-            squares.forEach((square) => {
-                square.addEventListener('click', player1Turn);
-                square.removeEventListener('click', player2Turn)
+    const computerTurn = (num) => {
+        setTimeout(() => {
+            minimax(gameBoard.board, num, player2.side, -100, 100);
+            let bestMove;
+            bestBoard.forEach((item, index) => {
+                if (item !== gameBoard.board[index]) bestMove = index
             })
-        }
+            let choice = document.querySelector(`#square${bestMove}`)
+            let evt = new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true, 
+                view: window
+            })
+            choice.dispatchEvent(evt)
+        }, 500);
+    }
+    const pvcTurn = (e) => {
+        pvpTurn(e);
+        if (checker(gameBoard.board, false)) return 
+        let num = 0;
+        gameBoard.board.forEach((slot) => {
+            if (slot !== '') num += 1
+        })
+        computerTurn(num)
+    }
+    const turns = () => {
+        let fx;
+        if (mode === 'pvp') fx = pvpTurn
+        else fx = pvcTurn;
+        if (count % 2 === 0) {
+                squares.forEach((square) => {
+                    square.addEventListener('click', fx);
+                    square.removeEventListener('click', player2Turn)
+                })
+            }
         else {
             squares.forEach((square) => {
                 square.addEventListener('click', player2Turn);
-                square.removeEventListener('click', player1Turn)
+                square.removeEventListener('click', fx)
             })
         }
     }
     const endGame = () => {
-        const winner = document.querySelector('.winner');
-        if (winner.textContent === 'X') {
-            announcement.textContent = `Congratulations, ${player1.name}. You win!`
+        let winner = document.querySelector('.winner');
+        if (!winner) {
+            announcement.textContent = 'Draw! Play again?'
             squares.forEach((square) => {
-                square.removeEventListener('click', player1Turn)
+                square.removeEventListener('click', pvpTurn)
+                square.removeEventListener('click', pvcTurn)
                 square.removeEventListener('click', player2Turn)
-            })
+        })
         }
-        else {
+        else if (winner.textContent === 'X') {
+            announcement.textContent = `Congratulations, ${player1.name}. You win!`
+        }
+        else if (winner.textContent === 'O') {
             announcement.textContent = `Congratulations, ${player2.name}. You win!` 
-            squares.forEach((square) => {
-                square.removeEventListener('click', player2Turn)
-                square.removeEventListener('click', player1Turn)
-            })
         }
     }
     const play = () => {
         if (document.querySelector('.winner')) {
-            const winners = document.querySelectorAll('.winner')
+            const winners = document.querySelectorAll('.winner');
             winners.forEach((winner) => {
                 winner.classList.remove('winner')
             })
@@ -203,6 +267,10 @@ const Game = (function() {
         const form = document.querySelector('form');
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            const modes = document.getElementsByName('mode');
+            modes.forEach((item) => {
+                if (item.checked) mode = item.id
+            })
             name1 = document.querySelector('#p1-name')
             name2 = document.querySelector('#p2-name');
             player1 = Player(name1.value)
@@ -213,5 +281,4 @@ const Game = (function() {
     }
     const newGame = document.querySelector('.new-game');
     newGame.addEventListener('click', play)
-    return {minimax}
 })()
