@@ -64,10 +64,6 @@ const Game = (function() {
         gameBoard.board.forEach((slot) => {
             if (slot === '') squaresLeft++
         })
-        if (squaresLeft === 0) {
-            winnerX = 'draw';
-            return true
-        }
         for (i=1; i<8; i+=3) {
             if (board[i] === board[i-1] &&
                 board[i-1] === board[i+1] &&
@@ -99,7 +95,11 @@ const Game = (function() {
                 winnerX = board[i];
                 if (game) return selectWinner(2, 4, 6)  
                 else return true
-            }     
+            } 
+        else if (squaresLeft === 0) {
+                winnerX = 'draw';
+                return true
+            }    
         else return false
     }
     const gameChecker = () => {
@@ -119,55 +119,48 @@ const Game = (function() {
         count++;
         turns()
     }
-    const staticValue = (list) => {
-        if (checker(list, false) !== true) return 0
-        let result = 0
-        let squaresLeft = 0;
-        list.forEach((slot) => {
-            if (slot === '') squaresLeft++
-        })
+    const staticValue = (depth) => {
+        let result = 0;
         if (winnerX === true) {
-            result = 1 + squaresLeft
+            result = 10 - depth
         }
-        else {
-            result = -1 - squaresLeft;
+        else if (winnerX === false) {
+            result = -10 + depth
         }
         return result
     }
-    const childPositions = (list, maxTurn) => {
+    const childPositions = (list, side) => {
         let position = [...list]
         let positions = [];
         list.forEach((slot, index) => {
             if (slot === '') {
                 position = [...list];
-                position[index] = maxTurn;
+                position[index] = side;
                 positions.push(position)
             }
         })
         return positions
     }
-    const minimax = (position, depth, maxTurn, alpha, beta) => {
-        let positions = childPositions(position, maxTurn)
-        let randomIndex = Math.floor(Math.random() * 2);
-        if (depth == 9 || checker(position, false)) return staticValue(position)
-        if (maxTurn) {
+    const minimax = (position, depth, maxTurn, side) => {
+        let positions = childPositions(position, side);
+        if (checker(position, false) === true) return staticValue(depth)
+        else if (maxTurn) {
             let maxValue = -100
             let bestPosition = []
             let i = 0;
             while (i < positions.length) {
-                let value = minimax(positions[i], depth + 1, false, alpha, beta);
+                let random = Math.floor(Math.random() * 2)
+                let value = minimax(positions[i], depth + 1, false, !side);
                 if (value > maxValue) {
                     maxValue = value;
-                    alpha = Math.max(value, alpha)
-                    bestPosition = positions[i];
-                    if (beta <= alpha) {break}
+                    bestPosition = positions[i]
                 }
-                else if (value === maxValue && randomIndex === 1) {
+                else if (value === maxValue && random === 1) {
                     bestPosition = positions[i]
                 }
                 i++
             }
-            bestBoard = [...bestPosition]
+            bestBoard = bestPosition
             return maxValue
         }
         else {
@@ -175,25 +168,24 @@ const Game = (function() {
             let bestPosition = []
             let i = 0;
             while (i < positions.length) {
-                let value = minimax(positions[i], depth + 1, true, alpha, beta);
+                let random = Math.floor(Math.random() * 2)
+                let value = minimax(positions[i], depth + 1, true, !side);
                 if (value < minValue) {
                     minValue = value;
-                    beta = Math.min(value, beta)
-                    bestPosition = positions[i];
-                    if (beta <= alpha) {break}
+                    bestPosition = positions[i]
                 }
-                else if (value === minValue && randomIndex === 1) {
+                else if (value === minValue && random === 1) {
                     bestPosition = positions[i]
                 }
                 i++
             }
-            bestBoard = [...bestPosition]
+            bestBoard = bestPosition
             return minValue
         }
     }
     const computerTurn = (num) => {
         setTimeout(() => {
-            minimax(gameBoard.board, num, player2.side, -100, 100);
+            minimax(gameBoard.board, num, true, player2.side);
             let bestMove;
             bestBoard.forEach((item, index) => {
                 if (item !== gameBoard.board[index]) bestMove = index
@@ -281,4 +273,5 @@ const Game = (function() {
     }
     const newGame = document.querySelector('.new-game');
     newGame.addEventListener('click', play)
+    return {minimax}
 })()
