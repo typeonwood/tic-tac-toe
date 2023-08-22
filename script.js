@@ -318,5 +318,4 @@ const Game = (function() {
     }
     const newGame = document.querySelector('.new-game');
     newGame.addEventListener('click', play)
-    return {minimax}
 })()
