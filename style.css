@@ -47,3 +47,11 @@ button {
 .winner {
     background-color: rgb(98, 228, 98);
 }
+
+.loser {
+    background-color: rgb(233, 65, 65);
+}
+
+input[readonly] {
+    color: gray;
+}

@@ -54,14 +54,21 @@ const Game = (function() {
         const winner1 = document.querySelector(`#square${num1}`)
         const winner2 = document.querySelector(`#square${num2}`)
         const winner3 = document.querySelector(`#square${num3}`);
-        winner1.classList.add('winner')
-        winner2.classList.add('winner')
-        winner3.classList.add('winner');
+        if (mode === 'pvc' && winnerX === player2.side) {
+            winner1.classList.add('loser')
+            winner2.classList.add('loser')
+            winner3.classList.add('loser')
+        }
+        else {
+            winner1.classList.add('winner')
+            winner2.classList.add('winner')
+            winner3.classList.add('winner')
+        }
         return true
     }
     const checker = (board, game=true) => {
         let squaresLeft = 0;
-        gameBoard.board.forEach((slot) => {
+        board.forEach((slot) => {
             if (slot === '') squaresLeft++
         })
         for (i=1; i<8; i+=3) {
@@ -85,14 +92,14 @@ const Game = (function() {
         if (board[0] === board[4] &&
             board[4] === board[8] &&
             board[8] !== '') {
-                winnerX = board[i];
+                winnerX = board[4];
                 if (game) return selectWinner(0, 4, 8)  
                 else return true
             }
         if (board[2] === board[4] &&
             board[4] === board[6] &&
             board[6] !== '') {
-                winnerX = board[i];
+                winnerX = board[4];
                 if (game) return selectWinner(2, 4, 6)  
                 else return true
             } 
@@ -142,21 +149,25 @@ const Game = (function() {
         return positions
     }
     const minimax = (position, depth, maxTurn=false) => {
-        if (checker(position, false)) return staticValue(depth)
+        let gameEnd = checker(position, false);
+        if (gameEnd === true) {
+            return staticValue(depth)
+        }
         else if (maxTurn) {
             let positions = childPositions(position, maxTurn)
             let maxValue = -100
             let bestPosition = []
             let i = 0;
             while (i < positions.length) {
+                let current = [...positions[i]]
                 let random = Math.floor(Math.random() * 2)
-                let value = minimax(positions[i], depth + 1, false);
+                let value = minimax(current, depth + 1, false);
                 if (value > maxValue) {
                     maxValue = value;
-                    bestPosition = [...positions[i]]
+                    bestPosition = [...current]
                 }
                 else if (value === maxValue && random === 1) {
-                    bestPosition = [...positions[i]]
+                    bestPosition = [...current]
                 }
                 i++
             }
@@ -169,11 +180,12 @@ const Game = (function() {
             let bestPosition = []
             let i = 0;
             while (i < positions.length) {
-                let random = Math.floor(Math.random() * 2)
-                let value = minimax(positions[i], depth + 1, true);
+                let current = [...positions[i]]
+                let random = Math.floor(Math.random() * 2);
+                let value = minimax(current, depth + 1, true);
                 if (value < minValue) {
                     minValue = value;
-                    bestPosition = [...positions[i]]
+                    bestPosition = [...current]
                 }
                 else if (value === minValue && random === 1) {
                     bestPosition = [...positions[i]]
@@ -215,32 +227,59 @@ const Game = (function() {
         else fx = pvcTurn;
         if (count % 2 === 0) {
                 squares.forEach((square) => {
-                    square.addEventListener('click', fx);
+                    if (square.textContent === '') square.addEventListener('click', fx);
                     square.removeEventListener('click', player2Turn)
                 })
             }
         else {
             squares.forEach((square) => {
-                square.addEventListener('click', player2Turn);
+                if (square.textContent === '') square.addEventListener('click', player2Turn);
                 square.removeEventListener('click', fx)
             })
         }
     }
     const endGame = () => {
-        let winner = document.querySelector('.winner');
-        if (!winner) {
+        let winner = document.querySelector('.winner')
+        let loser = document.querySelector('.loser');
+        if (!winner && !loser) {
             announcement.textContent = 'Draw! Play again?'
-            squares.forEach((square) => {
-                square.removeEventListener('click', pvpTurn)
-                square.removeEventListener('click', pvcTurn)
-                square.removeEventListener('click', player2Turn)
-        })
         }
-        else if (winner.textContent === 'X') {
-            announcement.textContent = `Congratulations, ${player1.name}. You win!`
+        else if (winner) {
+            if (winnerX === true) {
+                announcement.textContent = `Congratulations, ${player1.name}. You win!`
+            }
+            else {
+                announcement.textContent = `Congratulations, ${player2.name}. You win!` 
+            }
         }
-        else if (winner.textContent === 'O') {
-            announcement.textContent = `Congratulations, ${player2.name}. You win!` 
+        else {
+            announcement.textContent = 'Oooooof, tough luck. The bot wins!'
+        }
+        squares.forEach((square) => {
+            square.removeEventListener('click', pvpTurn)
+            square.removeEventListener('click', pvcTurn)
+            square.removeEventListener('click', player2Turn)
+    })
+    }
+    const toggleMode = () => {
+        const player2Name = document.querySelector('#p2-name')
+        if (mode === 'pvp') {
+            player2Name.setAttribute('readonly', '')
+            player2Name.value = 'computer'
+            mode = 'pvc'
+            const pvc = document.querySelector('#pvc');
+            pvc.removeEventListener('click', toggleMode)
+            const pvp = document.querySelector('#pvp');
+            pvp.addEventListener('click', toggleMode)
+        }
+        else {
+            player2Name.removeAttribute('readonly')
+            player2Name.value = ''
+            mode = 'pvp'
+            const pvc = document.querySelector('#pvc');
+            pvc.addEventListener('click', toggleMode)
+            const pvp = document.querySelector('#pvp');
+            pvp.removeEventListener('click', toggleMode)
         }
     }
     const play = () => {
@@ -248,6 +287,12 @@ const Game = (function() {
             const winners = document.querySelectorAll('.winner');
             winners.forEach((winner) => {
                 winner.classList.remove('winner')
+            })
+        }
+        if (document.querySelector('.loser')) {
+            const losers = document.querySelectorAll('.loser');
+            losers.forEach((loser) => {
+                loser.classList.remove('loser')
             })
         }
         gameBoard.board = ['','','','','','','','','']
@@ -260,10 +305,6 @@ const Game = (function() {
         const form = document.querySelector('form');
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            const modes = document.getElementsByName('mode');
-            modes.forEach((item) => {
-                if (item.checked) mode = item.id
-            })
             name1 = document.querySelector('#p1-name')
             name2 = document.querySelector('#p2-name');
             player1 = Player(name1.value)
@@ -271,6 +312,9 @@ const Game = (function() {
             modal.close();
             turns()
         })
+        const pvc = document.querySelector('#pvc');
+        pvc.addEventListener('click', toggleMode)
+
     }
     const newGame = document.querySelector('.new-game');
     newGame.addEventListener('click', play)
