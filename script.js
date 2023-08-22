@@ -230,11 +230,13 @@ const Game = (function() {
                     if (square.textContent === '') square.addEventListener('click', fx);
                     square.removeEventListener('click', player2Turn)
                 })
-            }
+        }
         else {
             squares.forEach((square) => {
-                if (square.textContent === '') square.addEventListener('click', player2Turn);
                 square.removeEventListener('click', fx)
+                setTimeout(() => {
+                    if (square.textContent === '') square.addEventListener('click', player2Turn);
+                }, 500)
             })
         }
     }
