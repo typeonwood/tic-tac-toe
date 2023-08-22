@@ -248,7 +248,8 @@ const Game = (function() {
         let winner = document.querySelector('.winner')
         let loser = document.querySelector('.loser');
         if (!winner && !loser) {
-            announcement.textContent = 'Draw! Play again?'
+            if (!checker(gameBoard.board, false)) announcement.textContent = ''
+            else announcement.textContent = 'Draw! Play again?'
         }
         else if (winner) {
             if (winnerX === true) {
@@ -315,7 +316,9 @@ const Game = (function() {
             name2 = document.querySelector('#p2-name');
             player1 = Player(name1.value)
             player2 = Player(name2.value, false)
-            modal.close();
+            modal.close()
+            const newGame = document.querySelector('.new-game');
+            newGame.addEventListener('click', endGame)
             turns()
         })
         const pvc = document.querySelector('#pvc');

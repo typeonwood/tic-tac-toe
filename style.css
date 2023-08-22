@@ -34,7 +34,7 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 4rem;
+    font-size: 3rem;
     color: rgb(225, 227, 203);
     font-weight: 800;
 }
