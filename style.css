@@ -1,3 +1,8 @@
+@font-face {
+    font-family: 'sketchup';
+    src: url('SketchupFreeTrial-gxmj5.otf');
+}
+
 html, body {
     --size: 200px;
     --font: 10px;
@@ -9,14 +14,29 @@ html, body {
     justify-content: space-between;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     font-size: var(--font);
+    background-image: url('vecteezy_drawing-cartoon-art-of-bright-wood-texture-pattern-landscape_18735545.jpg');
+    background-size: cover;
+}
+
+.header {
+    padding: 12px;
+    font-family: 'sketchup';
+    font-size: 8rem;
+    font-style: oblique;
+    font-weight: 100;
+    color: rgb(50, 26, 26);
 }
 
 .announcement {
-    font-size: 4rem;
-    height: calc(var(--size) / 2);
+    height: calc(var(--size) / 3);
+    padding: 24px;
+    padding-top: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 4rem;
+    color: rgb(225, 227, 203);
+    font-weight: 800;
 }
 
 .container {
@@ -34,12 +54,40 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10rem;
-    background-color: white;
+    font-family: 'sketchup';
+    font-size: 16rem;
+    background-color: rgb(225, 227, 203);
+}
+
+.x {
+    color: blue;
+}
+
+.o {
+    color: yellow;
 }
 
 .new-game {
-    margin: 24px;
+    margin: 12px;
+    padding: 12px;
+    padding-left: 24px;
+    padding-right: 24px;
+    font-size: 2rem;
+    font-weight: 800;
+    color: rgb(50, 26, 26);
+    border: 2px;
+    border-style: solid;
+    border-color: black;
+    border-radius: 8px;
+    background-color: rgb(225, 227, 203);
+}
+
+.new-game:hover {
+    background-color: rgb(205, 206, 182);
+}
+
+.new-game:active {
+    background-color: rgb(225, 227, 203);
 }
 
 button {

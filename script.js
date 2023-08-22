@@ -114,6 +114,8 @@ const Game = (function() {
     }
     const pvpTurn = (e) => {
         player1.move(e);
+        e.target.classList.remove('o')
+        e.target.classList.add('x');
         displayBoard.display();
         if (gameChecker() === true) return endGame()
         count++;
@@ -121,6 +123,8 @@ const Game = (function() {
     }
     const player2Turn = (e) => {
         player2.move(e);
+        e.target.classList.remove('x')
+        e.target.classList.add('o');
         displayBoard.display();
         if (gameChecker() === true) return endGame()
         count++;
