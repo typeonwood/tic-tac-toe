@@ -27,9 +27,9 @@ html, body {
 .square {
     width: var(--size);
     height: var(--size);
-    border: 6px;
-    border-style: solid;
-    border-color: black;
+    outline: 6px;
+    outline-style: solid;
+    outline-color: black;
     cursor: pointer;
     display: flex;
     align-items: center;
